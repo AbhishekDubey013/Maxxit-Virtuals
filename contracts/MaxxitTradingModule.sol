@@ -235,7 +235,7 @@ contract MaxxitTradingModule {
         uint256 amountIn,
         uint256 minAmountOut,
         uint24 poolFee
-    ) external onlyExecutor returns (uint256 amountOut) {
+    ) public onlyExecutor returns (uint256 amountOut) {
         // Auto-initialize on first trade
         if (!safeStats[safe].initialized) {
             uint256 usdcBalance = IERC20(USDC).balanceOf(safe);
@@ -315,7 +315,7 @@ contract MaxxitTradingModule {
         uint24 poolFee,
         address agentCreator,
         uint256 entryValueUSDC
-    ) external onlyExecutor returns (uint256 amountOut) {
+    ) public onlyExecutor returns (uint256 amountOut) {
         require(safeStats[safe].initialized, "Safe not initialized");
         require(agentCreator != address(0), "Invalid agent creator");
         

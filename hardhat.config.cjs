@@ -1,4 +1,3 @@
-require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -8,9 +7,9 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1000,  // Higher runs = smaller bytecode
       },
-      viaIR: false, // Disable IR to avoid stack too deep
+      viaIR: true,
     },
   },
   networks: {
