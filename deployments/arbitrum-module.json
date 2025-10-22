@@ -1,0 +1,14 @@
+{
+  "address": "0x74437d894C8E8A5ACf371E10919c688ae79E89FA",
+  "chainId": 42161,
+  "network": "Arbitrum One",
+  "deployer": "0x3828dFCBff64fD07B963Ef11BafE632260413Ab3",
+  "deploymentTx": "0xf54376ff224c5b048da618815a1fe0e76b4607bae703198264f9bfc0584baaa2",
+  "platformFeeReceiver": "0x3828dFCBff64fD07B963Ef11BafE632260413Ab3",
+  "platformProfitReceiver": "0x3828dFCBff64fD07B963Ef11BafE632260413Ab3",
+  "moduleOwner": "0x3828dFCBff64fD07B963Ef11BafE632260413Ab3",
+  "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  "tradeFee": "0.2 USDC",
+  "profitShare": "20%",
+  "deployedAt": "2025-10-09T03:03:10.935Z"
+}

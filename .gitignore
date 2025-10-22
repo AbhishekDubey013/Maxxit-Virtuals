@@ -1,0 +1,37 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+.vercel
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Python
+twitter-proxy-venv
+__pycache__
+*.pyc
+
+# Next.js
+.next
+out
+
+# Logs
+logs
+*.log
+
+# Database
+prisma/*.db
+prisma/*.db-journal
+
+# Build
+build
+.cache
+
+# Replit
+.local
+.replit

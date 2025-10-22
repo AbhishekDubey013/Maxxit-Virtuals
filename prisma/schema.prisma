@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CtAccount {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  xUsername           String                @unique @map("x_username")
+  displayName         String?               @map("display_name")
+  followersCount      Int?                  @map("followers_count")
+  impactFactor        Float                 @default(0) @map("impact_factor") @db.Real
+  lastSeenAt          DateTime?             @map("last_seen_at") @db.Timestamptz(6)
+  agentAccounts       AgentAccount[]
+  ctPosts             CtPost[]
+  impactFactorHistory ImpactFactorHistory[]
+
+  @@map("ct_accounts")
+}
+
+model CtPost {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ctAccountId       String    @map("ct_account_id") @db.Uuid
+  tweetId           String    @unique @map("tweet_id")
+  tweetText         String    @map("tweet_text")
+  tweetCreatedAt    DateTime  @map("tweet_created_at") @db.Timestamptz(6)
+  isSignalCandidate Boolean   @default(false) @map("is_signal_candidate")
+  extractedTokens   String[]  @default([]) @map("extracted_tokens")
+  ctAccount         CtAccount @relation(fields: [ctAccountId], references: [id], onDelete: Cascade)
+
+  @@index([ctAccountId])
+  @@map("ct_posts")
+}
+
+model Agent {
+  id                     String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creatorWallet          String                @map("creator_wallet")
+  profitReceiverAddress  String                @map("profit_receiver_address")
+  name                   String
+  venue                  Venue
+  status                 AgentStatus           @default(DRAFT)
+  weights                Int[]                 @db.SmallInt
+  authorizationSignature String?               @map("authorization_signature")
+  authorizationMessage   Json?                 @map("authorization_message")
+  apr30d                 Float?                @map("apr_30d") @db.Real
+  apr90d                 Float?                @map("apr_90d") @db.Real
+  aprSi                  Float?                @map("apr_si") @db.Real
+  sharpe30d              Float?                @map("sharpe_30d") @db.Real
+  agentAccounts          AgentAccount[]
+  deployments            AgentDeployment[]
+  impactFactorHistory    ImpactFactorHistory[]
+  pnlSnapshots           PnlSnapshot[]
+  signals                Signal[]
+
+  @@index([status, venue])
+  @@map("agents")
+}
+
+model AgentDeployment {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agentId         String          @map("agent_id") @db.Uuid
+  userWallet      String          @map("user_wallet")
+  safeWallet      String          @map("safe_wallet")
+  moduleAddress   String?         @map("module_address")
+  moduleEnabled   Boolean         @default(false) @map("module_enabled")
+  status          AgentStatus     @default(ACTIVE)
+  subActive       Boolean         @default(true) @map("sub_active")
+  subStartedAt    DateTime        @default(now()) @map("sub_started_at") @db.Timestamptz(6)
+  trialEndsAt     DateTime?       @map("trial_ends_at") @db.Timestamptz(6)
+  nextBillingAt   DateTime?       @map("next_billing_at") @db.Timestamptz(6)
+  agent           Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  billingEvents   BillingEvent[]
+  pnlSnapshots    PnlSnapshot[]
+  positions       Position[]
+  telegramUsers   TelegramUser[]
+  telegramTrades  TelegramTrade[]
+
+  @@unique([userWallet, agentId])
+  @@index([agentId])
+  @@index([userWallet])
+  @@map("agent_deployments")
+}
+
+model AgentAccount {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agentId     String    @map("agent_id") @db.Uuid
+  ctAccountId String    @map("ct_account_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  ctAccount   CtAccount @relation(fields: [ctAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, ctAccountId])
+  @@index([agentId])
+  @@index([ctAccountId])
+  @@map("agent_accounts")
+}
+
+model MarketIndicators6h {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tokenSymbol String   @map("token_symbol")
+  windowStart DateTime @map("window_start") @db.Timestamptz(6)
+  indicators  Json
+
+  @@unique([tokenSymbol, windowStart])
+  @@index([tokenSymbol])
+  @@map("market_indicators_6h")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model Signal {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agentId             String                @map("agent_id") @db.Uuid
+  tokenSymbol         String                @map("token_symbol")
+  venue               Venue
+  side                String
+  sizeModel           Json                  @map("size_model")
+  riskModel           Json                  @map("risk_model")
+  sourceTweets        String[]              @default([]) @map("source_tweets")
+  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  skippedReason       String?               @map("skipped_reason")
+  signalHash          String?               @map("signal_hash")
+  creatorAddress      String?               @map("creator_address")
+  proofOfIntentTxHash String?               @map("proof_of_intent_tx_hash")
+  impactFactorHistory ImpactFactorHistory[]
+  positions           Position[]
+  agent               Agent                 @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId, createdAt])
+  @@map("signals")
+}
+
+model Position {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deploymentId        String                @map("deployment_id") @db.Uuid
+  signalId            String                @map("signal_id") @db.Uuid
+  venue               Venue
+  tokenSymbol         String                @map("token_symbol")
+  side                String
+  qty                 Decimal               @db.Decimal(20, 8)
+  entryPrice          Decimal               @map("entry_price") @db.Decimal(20, 8)
+  entryTxHash         String?               @map("entry_tx_hash")
+  stopLoss            Decimal?              @map("stop_loss") @db.Decimal(20, 8)
+  takeProfit          Decimal?              @map("take_profit") @db.Decimal(20, 8)
+  trailingParams      Json?                 @map("trailing_params")
+  openedAt            DateTime              @default(now()) @map("opened_at") @db.Timestamptz(6)
+  closedAt            DateTime?             @map("closed_at") @db.Timestamptz(6)
+  exitPrice           Decimal?              @map("exit_price") @db.Decimal(20, 8)
+  exitTxHash          String?               @map("exit_tx_hash")
+  pnl                 Decimal?              @db.Decimal(20, 8)
+  source              String                @default("auto") // 'auto' or 'telegram'
+  manualTradeId       String?               @map("manual_trade_id") @db.Uuid
+  billingEvents       BillingEvent[]
+  impactFactorHistory ImpactFactorHistory[]
+  deployment          AgentDeployment       @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+  signal              Signal                @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  manualTrade         TelegramTrade?        @relation(fields: [manualTradeId], references: [id])
+
+  @@unique([deploymentId, signalId])
+  @@index([deploymentId, openedAt])
+  @@index([signalId])
+  @@index([source])
+  @@map("positions")
+}
+
+// New table: Telegram user linking
+model TelegramUser {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  telegramUserId  String            @unique @map("telegram_user_id") // Telegram's user ID
+  telegramUsername String?          @map("telegram_username")
+  firstName       String?           @map("first_name")
+  deploymentId    String            @map("deployment_id") @db.Uuid
+  linkCode        String?           @unique @map("link_code") // One-time code for linking
+  linkedAt        DateTime          @default(now()) @map("linked_at") @db.Timestamptz(6)
+  lastActiveAt    DateTime          @default(now()) @map("last_active_at") @db.Timestamptz(6)
+  isActive        Boolean           @default(true) @map("is_active")
+  deployment      AgentDeployment   @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+  trades          TelegramTrade[]
+
+  @@index([deploymentId])
+  @@map("telegram_users")
+}
+
+// New table: Manual trades via Telegram
+model TelegramTrade {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  telegramUserId  String        @map("telegram_user_id") @db.Uuid
+  deploymentId    String        @map("deployment_id") @db.Uuid
+  messageId       String        @map("message_id") // Telegram message ID
+  command         String        // Original user command
+  parsedIntent    Json          @map("parsed_intent") // { action, token, amount, etc }
+  confirmed       Boolean       @default(false)
+  confirmedAt     DateTime?     @map("confirmed_at") @db.Timestamptz(6)
+  executed        Boolean       @default(false)
+  executedAt      DateTime?     @map("executed_at") @db.Timestamptz(6)
+  signalId        String?       @map("signal_id") @db.Uuid
+  status          String        @default("pending") // pending, confirmed, executing, executed, failed, cancelled
+  errorMessage    String?       @map("error_message")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  telegramUser    TelegramUser  @relation(fields: [telegramUserId], references: [id], onDelete: Cascade)
+  deployment      AgentDeployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+  positions       Position[]
+
+  @@index([telegramUserId])
+  @@index([deploymentId])
+  @@index([status])
+  @@map("telegram_trades")
+}
+
+model BillingEvent {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  positionId   String?         @map("position_id") @db.Uuid
+  deploymentId String          @map("deployment_id") @db.Uuid
+  kind         BillingKind
+  amount       Decimal         @db.Decimal(20, 8)
+  asset        String          @default("USDC")
+  status       BillingStatus
+  occurredAt   DateTime        @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  metadata     Json?
+  deployment   AgentDeployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+  position     Position?       @relation(fields: [positionId], references: [id])
+
+  @@index([deploymentId, occurredAt])
+  @@index([kind, occurredAt])
+  @@map("billing_events")
+}
+
+model PnlSnapshot {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agentId      String          @map("agent_id") @db.Uuid
+  deploymentId String          @map("deployment_id") @db.Uuid
+  day          DateTime        @db.Date
+  pnl          Decimal?        @db.Decimal(20, 8)
+  returnPct    Float?          @map("return_pct") @db.Real
+  agent        Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  deployment   AgentDeployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+
+  @@unique([deploymentId, day])
+  @@index([agentId, day])
+  @@map("pnl_snapshots")
+}
+
+model ImpactFactorHistory {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ctAccountId     String    @map("ct_account_id") @db.Uuid
+  signalId        String?   @map("signal_id") @db.Uuid
+  positionId      String?   @map("position_id") @db.Uuid
+  pnlContribution Decimal?  @map("pnl_contribution") @db.Decimal(20, 8)
+  weight          Float?    @db.Real
+  modelVersion    String?   @map("model_version")
+  occurredAt      DateTime  @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  agentId         String?   @map("agent_id") @db.Uuid
+  agent           Agent?    @relation(fields: [agentId], references: [id])
+  ctAccount       CtAccount @relation(fields: [ctAccountId], references: [id], onDelete: Cascade)
+  position        Position? @relation(fields: [positionId], references: [id])
+  signal          Signal?   @relation(fields: [signalId], references: [id])
+
+  @@index([ctAccountId, occurredAt])
+  @@map("impact_factor_history")
+}
+
+model VenueStatus {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venue            Venue
+  tokenSymbol      String   @map("token_symbol")
+  minSize          Decimal? @map("min_size") @db.Decimal(20, 8)
+  tickSize         Decimal? @map("tick_size") @db.Decimal(20, 8)
+  slippageLimitBps Int?     @map("slippage_limit_bps")
+
+  @@unique([venue, tokenSymbol])
+  @@index([venue, tokenSymbol])
+  @@map("venues_status")
+}
+
+model TokenRegistry {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chain           String
+  tokenSymbol     String  @map("token_symbol")
+  tokenAddress    String  @map("token_address")
+  preferredRouter String? @map("preferred_router")
+
+  @@unique([chain, tokenSymbol])
+  @@map("token_registry")
+}
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventName   String   @map("event_name")
+  subjectType String?  @map("subject_type")
+  subjectId   String?  @map("subject_id") @db.Uuid
+  payload     Json?
+  occurredAt  DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  traceId     String?  @map("trace_id")
+
+  @@index([eventName, occurredAt])
+  @@map("audit_logs")
+}
+
+enum Venue {
+  SPOT
+  GMX
+  HYPERLIQUID
+
+  @@map("venue_t")
+}
+
+enum AgentStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+
+  @@map("agent_status_t")
+}
+
+enum BillingKind {
+  SUBSCRIPTION
+  INFRA_FEE
+  PROFIT_SHARE
+
+  @@map("bill_kind_t")
+}
+
+enum BillingStatus {
+  CHARGED
+  FAILED
+
+  @@map("bill_status_t")
+}

@@ -1,0 +1,18 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "moduleAddress": "0xf934Cbb5667EF2F5d50f9098F9B2A8d018354c19",
+  "deployer": "0x421E4e6b301679fe2B649ed4A6C60aeCBB8DD3a6",
+  "txHash": "0xc4382aaef3971c07f9055f220f8d9fd1dd91a12e56a3cbd0649507ee3de092a7",
+  "timestamp": "2025-10-07T11:45:53.500Z",
+  "config": {
+    "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "platformFeeReceiver": "0x421E4e6b301679fe2B649ed4A6C60aeCBB8DD3a6",
+    "moduleOwner": "0x421E4e6b301679fe2B649ed4A6C60aeCBB8DD3a6"
+  },
+  "features": [
+    "approveTokenForDex() - one-time token approval",
+    "No per-trade approval - more gas efficient",
+    "All previous features intact"
+  ]
+}

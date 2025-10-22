@@ -1,0 +1,14 @@
+{
+  "network": "base",
+  "chainId": 8453,
+  "moduleAddress": "",
+  "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "rpcUrl": "https://mainnet.base.org",
+  "explorer": "https://basescan.org",
+  "description": "Base mainnet deployment",
+  "notes": [
+    "Deploy with: npx hardhat run contracts/deploy/deploy-module.ts --network base",
+    "Verify with: npx hardhat verify --network base <MODULE_ADDRESS> <PLATFORM_FEE_RECEIVER> <PLATFORM_PROFIT_RECEIVER> <USDC> <MODULE_OWNER>"
+  ]
+}
+

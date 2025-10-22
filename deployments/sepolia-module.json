@@ -1,0 +1,16 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "moduleAddress": "0xa87f82433294cE8A3C8f08Ec5D2825e946C0c0FE",
+  "deployer": "0x421E4e6b301679fe2B649ed4A6C60aeCBB8DD3a6",
+  "txHash": "0xb5b99a0f5364bf8226d0a201d4cd3177a397c123be90e4e7c63469333d6af6c4",
+  "blockNumber": 9348622,
+  "gasUsed": "1720048",
+  "timestamp": "2025-10-05T13:33:04.035Z",
+  "config": {
+    "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "platformFeeReceiver": "0x421E4e6b301679fe2B649ed4A6C60aeCBB8DD3a6",
+    "moduleOwner": "0x421E4e6b301679fe2B649ed4A6C60aeCBB8DD3a6",
+    "profitReceiverNote": "Profit receiver is passed per-trade - each agent creator gets their 20% share"
+  }
+}
